@@ -9,6 +9,8 @@ function scribble_preparse_buffered(_text, _font) {
 	if (string_length(_text) == 0) return "";
 	
 	var _font_tag = $"[{font_get_name(_font)}]";
+	var _font_info = font_get_info(_font);
+	var _glyphs = _font_info.glyphs;
 	
     var byte_len = string_byte_length(_text);
 
@@ -45,6 +47,7 @@ function scribble_preparse_buffered(_text, _font) {
 
 	            // Insert the formatted emoji with the correct font tag
 	            buffer_write(output_buff, buffer_text, _font_tag);
+				show_debug_message($"lower_surrogate :: {chr(lower_surrogate)} :: {lower_surrogate}")
 	            buffer_write_codepoint(output_buff, lower_surrogate);
 	            buffer_write(output_buff, buffer_text, "[/font]");
 	            continue;
@@ -64,7 +67,8 @@ function scribble_preparse_buffered(_text, _font) {
         
 	        if (codepoint > 0xFFFF) { 
 	            // **Insert Scribble Font Tags for Emojis**
-	            buffer_write(output_buff, buffer_text, "[{_font_arg}]");
+	            buffer_write(output_buff, buffer_text, _font_tag);
+				show_debug_message($"byte1 :: {chr(byte1)} :: {byte1}")
 	            buffer_write_codepoint(output_buff, byte1); // Write lower surrogate only
 	            buffer_write(output_buff, buffer_text, "[/font]");
 	            continue;
@@ -73,7 +77,37 @@ function scribble_preparse_buffered(_text, _font) {
 
 	    // **Write normally for standard characters**
 	    if (high_surrogate == 0) {
-	        buffer_write(output_buff, buffer_u8, byte1);
+			if (byte1 < 0x80) {
+			    var utf8_char = chr(byte1); // Single-byte ASCII
+			} 
+			else if ((byte1 & 0xE0) == 0xC0) {
+			    var byte2 = buffer_read(input_buff, buffer_u8); i++;
+			    var utf8_char = chr(((byte1 & 0x1F) << 6) | (byte2 & 0x3F));
+			} 
+			else if ((byte1 & 0xF0) == 0xE0) {
+			    var byte2 = buffer_read(input_buff, buffer_u8); i++;
+			    var byte3 = buffer_read(input_buff, buffer_u8); i++;
+			    var utf8_char = chr(((byte1 & 0x0F) << 12) | ((byte2 & 0x3F) << 6) | (byte3 & 0x3F));
+			} 
+			else if ((byte1 & 0xF8) == 0xF0) {
+			    var byte2 = buffer_read(input_buff, buffer_u8); i++;
+			    var byte3 = buffer_read(input_buff, buffer_u8); i++;
+			    var byte4 = buffer_read(input_buff, buffer_u8); i++;
+			    var utf8_char = chr(((byte1 & 0x07) << 18) | ((byte2 & 0x3F) << 12) | ((byte3 & 0x3F) << 6) | (byte4 & 0x3F));
+			}
+
+			if (byte1 != ord(" "))
+			&& (struct_exists(_glyphs, utf8_char)) {
+				//show_debug_message($"Glyph found: {utf8_char}");
+				buffer_write(output_buff, buffer_text, _font_tag);
+				buffer_write(output_buff, buffer_text, utf8_char);
+	            buffer_write(output_buff, buffer_text, "[/font]");
+				
+				continue;
+			}
+			
+			
+	        buffer_write(output_buff, buffer_text, utf8_char);
 	    }
 	}
 
@@ -84,9 +118,113 @@ function scribble_preparse_buffered(_text, _font) {
 
     buffer_resize(input_buff, 0);
     buffer_resize(output_buff, 0);
-
-    return parsed_str;
+	
+	return parsed_str;
 }
+
+///@ignore
+function __scribble_noto_mono_preparse(_str) {
+	switch (EMOJI_SIZE) {
+		case 16: return scribble_preparse_buffered(_str, fntFontNotoemojiMedium_Lite_16);
+		case 24: return scribble_preparse_buffered(_str, fntFontNotoemojiMedium_Lite_24);
+		case 32: return scribble_preparse_buffered(_str, fntFontNotoemojiMedium_Lite_32);
+		case 48: return scribble_preparse_buffered(_str, fntFontNotoemojiMedium_Lite_48);
+		case 64: return scribble_preparse_buffered(_str, fntFontNotoemojiMedium_Lite_64);
+	}
+}
+function scribble_google_mono(_string) {
+	return scribble(_string).preprocessor(__scribble_noto_mono_preparse);
+}
+function scribble_noto_mono(_string) {
+	return scribble(_string).preprocessor(__scribble_noto_mono_preparse);
+}
+
+///@ignore
+function __scribble_noto_preparse(_str) {
+	switch (EMOJI_SIZE) {
+		case 16: return scribble_preparse_buffered(_str, fntGoogleNoto_Lite_16);
+		case 24: return scribble_preparse_buffered(_str, fntGoogleNoto_Lite_24);
+		case 32: return scribble_preparse_buffered(_str, fntGoogleNoto_Lite_32);
+		case 48: return scribble_preparse_buffered(_str, fntGoogleNoto_Lite_48);
+		case 64: return scribble_preparse_buffered(_str, fntGoogleNoto_Lite_64);
+	}
+}
+function scribble_google(_string) {
+	return scribble(_string).preprocessor(__scribble_noto_preparse);
+}
+function scribble_noto(_string) {
+	return scribble(_string).preprocessor(__scribble_noto_preparse);
+}
+
+///@ignore
+function __scribble_segoe_ui_mono_preparse(_str) {
+	switch (EMOJI_SIZE) {
+		case 16: return scribble_preparse_buffered(_str, fntFontSeguiemj_Lite_16);
+		case 24: return scribble_preparse_buffered(_str, fntFontSeguiemj_Lite_24);
+		case 32: return scribble_preparse_buffered(_str, fntFontSeguiemj_Lite_32);
+		case 48: return scribble_preparse_buffered(_str, fntFontSeguiemj_Lite_48);
+		case 64: return scribble_preparse_buffered(_str, fntFontSeguiemj_Lite_64);
+	}
+}
+function scribble_microsoft_mono(_string) {
+	return scribble(_string).preprocessor(__scribble_segoe_ui_mono_preparse);
+}
+function scribble_segoe_ui_mono(_string) {
+	return scribble(_string).preprocessor(__scribble_segoe_ui_mono_preparse);
+}
+
+///@ignore
+function __scribble_segoe_ui_preparse(_str) {
+	switch (EMOJI_SIZE) {
+		case 16: return scribble_preparse_buffered(_str, fntMicrosoftSegoeUiEmoji_Lite_16);
+		case 24: return scribble_preparse_buffered(_str, fntMicrosoftSegoeUiEmoji_Lite_24);
+		case 32: return scribble_preparse_buffered(_str, fntMicrosoftSegoeUiEmoji_Lite_32);
+		case 48: return scribble_preparse_buffered(_str, fntMicrosoftSegoeUiEmoji_Lite_48);
+		case 64: return scribble_preparse_buffered(_str, fntMicrosoftSegoeUiEmoji_Lite_64);
+	}
+}
+function scribble_microsoft(_string) {
+	return scribble(_string).preprocessor(__scribble_segoe_ui_preparse);
+}
+function scribble_segoe_ui(_string) {
+	return scribble(_string).preprocessor(__scribble_segoe_ui_preparse);
+}
+
+///@ignore
+function __scribble_openmoji_preparse(_str) {
+	switch (EMOJI_SIZE) {
+		case 16: return scribble_preparse_buffered(_str, fntOpenmoji_Lite_16);
+		case 24: return scribble_preparse_buffered(_str, fntOpenmoji_Lite_24);
+		case 32: return scribble_preparse_buffered(_str, fntOpenmoji_Lite_32);
+		case 48: return scribble_preparse_buffered(_str, fntOpenmoji_Lite_48);
+		case 64: return scribble_preparse_buffered(_str, fntOpenmoji_Lite_64);
+	}
+}
+function scribble_openmoji(_string) {
+	return scribble(_string).preprocessor(__scribble_openmoji_preparse);
+}
+
+///@ignore
+function __scribble_twemoji_preparse(_str) {
+	switch (EMOJI_SIZE) {
+		case 16: return scribble_preparse_buffered(_str, fntTwitterTwemoji_Lite_16);
+		case 24: return scribble_preparse_buffered(_str, fntTwitterTwemoji_Lite_24);
+		case 32: return scribble_preparse_buffered(_str, fntTwitterTwemoji_Lite_32);
+		case 48: return scribble_preparse_buffered(_str, fntTwitterTwemoji_Lite_48);
+		case 64: return scribble_preparse_buffered(_str, fntTwitterTwemoji_Lite_64);
+	}
+}
+function scribble_twemoji(_string) {
+	return scribble(_string).preprocessor(__scribble_twemoji_preparse);
+}
+function scribble_twitter(_string) {
+	return scribble(_string).preprocessor(__scribble_twemoji_preparse);
+}
+function scribble_discord(_string) {
+	return scribble(_string).preprocessor(__scribble_twemoji_preparse);
+}
+
+///@ignore
 function __scribble_whatsapp_preparse(_str) {
 	switch (EMOJI_SIZE) {
 		case 16: return scribble_preparse_buffered(_str, fntWhatsapp_Lite_16);

@@ -727,6 +727,7 @@ function decimal_to_unicode(_decimal) {
 }
 
 #region Tests 1
+/*
 repeat(5)show_debug_message("===")
 show_debug_message("\u") // ""
 show_debug_message("\uf") // ""
@@ -742,28 +743,28 @@ show_debug_message("\u0111") // "đ"
 show_debug_message("\u1111") // "ᄑ"
 
 var converter = UnicodeTool("🀄");
-//show_debug_message(converter); // 🀄
-//show_debug_message(converter.utf8()); // ð
-//show_debug_message(converter.utf8hex()); // \xF0\x9F\x80\x84
-//show_debug_message(converter.utf16());  // \uD83C\uDC04
-//show_debug_message(converter.utf32());  // u+0001F004
-//show_debug_message(converter.url());  // %F0%9F%80%84
-//show_debug_message(converter.decimal()); // 55356 56324
-//repeat(2)show_debug_message("")
+show_debug_message(converter); // 🀄
+show_debug_message(converter.utf8()); // ð
+show_debug_message(converter.utf8hex()); // \xF0\x9F\x80\x84
+show_debug_message(converter.utf16());  // \uD83C\uDC04
+show_debug_message(converter.utf32());  // u+0001F004
+show_debug_message(converter.url());  // %F0%9F%80%84
+show_debug_message(converter.decimal()); // 55356 56324
+repeat(2)show_debug_message("")
 
 // UTF-8 to Unicode Tests
-//show_debug_message(utf8_to_unicode("ð")); // 🀄 (U+1F004)
-//show_debug_message(utf8_to_unicode("\xF0\x9F\x92\xA9")); // 💩 (U+1F4A9)
-//show_debug_message(utf8_to_unicode("\xE2\x9C\x85")); // ✅ (U+2705)
-//show_debug_message(utf8_to_unicode("hello")); // "hello"
-//repeat(2)show_debug_message("")
+show_debug_message(utf8_to_unicode("ð")); // 🀄 (U+1F004)
+show_debug_message(utf8_to_unicode("\xF0\x9F\x92\xA9")); // 💩 (U+1F4A9)
+show_debug_message(utf8_to_unicode("\xE2\x9C\x85")); // ✅ (U+2705)
+show_debug_message(utf8_to_unicode("hello")); // "hello"
+repeat(2)show_debug_message("")
 
 // UTF-8 Hex to Unicode Tests
-//show_debug_message(utf8hex_to_unicode(@'\xF0\x9F\x80\x84')); // 🀄 (U+1F004)
-//show_debug_message(utf8hex_to_unicode(@'\xF0\x9F\x92\xA9')); // 💩 (U+1F4A9)
-//show_debug_message(utf8hex_to_unicode(@'\xE2\x9C\x85')); // ✅ (U+2705)
-//show_debug_message(utf8hex_to_unicode(@'\x68\x65\x6C\x6C\x6F')); // "hello"
-//repeat(2)show_debug_message("")
+show_debug_message(utf8hex_to_unicode(@'\xF0\x9F\x80\x84')); // 🀄 (U+1F004)
+show_debug_message(utf8hex_to_unicode(@'\xF0\x9F\x92\xA9')); // 💩 (U+1F4A9)
+show_debug_message(utf8hex_to_unicode(@'\xE2\x9C\x85')); // ✅ (U+2705)
+show_debug_message(utf8hex_to_unicode(@'\x68\x65\x6C\x6C\x6F')); // "hello"
+repeat(2)show_debug_message("")
 
 // UTF-16 to Unicode Tests
 show_debug_message(utf16_to_unicode("\\uD83D\\uDE00")); // 😀 (U+1F600)
@@ -839,7 +840,6 @@ show_debug_message($"{_return} == 🐶 :: {_return == _char ? "True" : "False"}"
 var _char = "👩‍💻"; // 👩‍💻
 var _return = utf16_to_unicode("\\uD83D\\uDC69\\u200D\\uD83D\\uDCBB");
 show_debug_message($"{_return} == 👩‍💻 :: {_return == _char ? "True" : "False"}"); // 👩‍💻
-#endregion
 
 /// ✅ Edge Cases - Unexpected Spaces & Characters
 var _char = "\u 2603"; 
@@ -921,8 +921,6 @@ var _char = "\u1111";
 var _return = utf16_to_unicode("\\u1111");
 show_debug_message($"{_return} == \u1111 :: {_return == _char ? "True" : "False"}"); // ᄑ (U+1111)
 
+//*/
+#endregion
 
-show_debug_message(unicode_to_utf32("🀄"))
-show_debug_message(unicode_to_utf32("🀄"))
-show_debug_message(unicode_to_utf32("🀄"))
-show_debug_message(unicode_to_utf32("🀄"))

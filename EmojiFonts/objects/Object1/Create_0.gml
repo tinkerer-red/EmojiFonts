@@ -1,34 +1,34 @@
 /// @description Insert description here
 // You can write your code in this editor
-
-struct = font_get_info(fntWhatsapp_Lite_32).glyphs
-glyphs = struct_get_names(struct);
-temp = {};
-
-for (var i=0; i<array_length(glyphs); i++){
-	temp[$ glyphs[i]] = struct[$ glyphs[i]]
-}
-
-//show_debug_message(json_stringify(temp, true))
-
-index = 0;
 yy = 0
 
 var _arr = string_split(get_emojis(), "\n", true)
 
 emoji_str = get_emojis()
-string_lines = string_split(emoji_str, "\n")
+string_lines = string_split(emoji_str, "\n", true)
 
-glyphs = font_get_info(fntWhatsapp_Lite_16).glyphs
-glyph_names = struct_get_names(glyphs)
-array_sort(glyph_names, true)
-array_delete(glyph_names, 0, 1)
-
-
-for(var _i=60; _i<65; _i++) {
+var glyph_strings = [];
+var unicode_strings = [];
+var name_strings = [];
+for(var _i=0; _i<__SCRIBBLE_MAX_LINES; _i++) {
 	var _str = string_lines[_i];
-	var _new_str = __scribble_whatsapp_preparse(_str);
-//	show_debug_message(_new_str)
+	_str = string_replace_all(_str, @'" :: "', "|");
+	_str = string_replace_all(_str, @'"', "");
+	var _arr = string_split(_str, "|")
+	show_debug_message(_arr)
+	glyph_strings[_i] = _arr[0];
+	unicode_strings[_i] = " :: " + _arr[1] + " :: " + _arr[2];
+	//name_strings[_i] = _arr[2];
 }
 
-show_debug_message(__scribble_whatsapp_preparse(get_emojis()))
+//array_resize(glyph_strings, __SCRIBBLE_MAX_LINES-10)
+//array_resize(unicode_strings, __SCRIBBLE_MAX_LINES)
+//array_resize(name_strings, __SCRIBBLE_MAX_LINES)
+
+glyph_string = string_join_ext("\n", glyph_strings);
+unicode_string = string_join_ext("\n", unicode_strings);
+//name_string = string_join_ext("\n", name_strings);
+
+
+
+show_debug_overlay(true)
