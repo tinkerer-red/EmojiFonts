@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"UnicodeTool",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"UnicodeTool",
+  "parent":{
+    "name":"EmojiFonts",
+    "path":"EmojiFonts.yyp",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}
