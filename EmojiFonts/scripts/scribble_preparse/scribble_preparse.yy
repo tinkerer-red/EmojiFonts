@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"scribble_preparse",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scribble_preparse",
+  "parent":{
+    "name":"EmojiFonts",
+    "path":"EmojiFonts.yyp",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

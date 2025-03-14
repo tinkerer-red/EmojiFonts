@@ -920,3 +920,9 @@ show_debug_message($"{_return} == \u0111 :: {_return == _char ? "True" : "False"
 var _char = "\u1111"; 
 var _return = utf16_to_unicode("\\u1111");
 show_debug_message($"{_return} == \u1111 :: {_return == _char ? "True" : "False"}"); // ᄑ (U+1111)
+
+
+show_debug_message(unicode_to_utf32("🀄"))
+show_debug_message(unicode_to_utf32("🀄"))
+show_debug_message(unicode_to_utf32("🀄"))
+show_debug_message(unicode_to_utf32("🀄"))
