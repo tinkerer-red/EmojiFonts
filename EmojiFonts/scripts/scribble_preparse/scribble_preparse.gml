@@ -2,7 +2,7 @@
 #macro EMOJI_SIZE 16 //16, 24, 32, 48, 64 supported
 
 ///@ignore
-function scribble_preparse_buffered(_text, _font) {
+function __scribble_preparse_buffered(_text, _font) {
     static input_buff = buffer_create(0, buffer_grow, 1);
     static output_buff = buffer_create(0, buffer_grow, 1);
     
@@ -121,15 +121,45 @@ function scribble_preparse_buffered(_text, _font) {
 	
 	return parsed_str;
 }
+///@ignore
+function font_has_65535_limits(_font) {
+    var _font_info = font_get_info(_font);
+    var _glyphs = _font_info.glyphs;
+    var _glyph_keys = struct_get_names(_glyphs);
+    static _mismatches = [];
+    
+    for (var _i = 0; _i < array_length(_glyph_keys); _i++) {
+        var _key = _glyph_keys[_i];
+        var _char = _glyphs[$ _key].char;
+
+        // Convert the key to a character using ord()
+        var _ord_value = ord(_key);
+        
+        // Check if glyph character matches the ord() value
+        if (_ord_value != _char) {
+            array_push(_mismatches, _key);
+        }
+    }
+
+    if (array_length(_mismatches) > 0) {
+		array_resize(_mismatches, 0);
+        show_debug_message("Mismatched glyphs found: " + string_join(_mismatches, ", "));
+		return true;
+    } else {
+		array_resize(_mismatches, 0);
+        show_debug_message("All glyphs match their expected ord() values.");
+		return false;
+    }
+}
 
 ///@ignore
 function __scribble_noto_mono_preparse(_str) {
 	switch (EMOJI_SIZE) {
-		case 16: return scribble_preparse_buffered(_str, fntFontNotoemojiMedium_Lite_16);
-		case 24: return scribble_preparse_buffered(_str, fntFontNotoemojiMedium_Lite_24);
-		case 32: return scribble_preparse_buffered(_str, fntFontNotoemojiMedium_Lite_32);
-		case 48: return scribble_preparse_buffered(_str, fntFontNotoemojiMedium_Lite_48);
-		case 64: return scribble_preparse_buffered(_str, fntFontNotoemojiMedium_Lite_64);
+		case 16: return __scribble_preparse_buffered(_str, fntFontNotoemojiMedium_Lite_16);
+		case 24: return __scribble_preparse_buffered(_str, fntFontNotoemojiMedium_Lite_24);
+		case 32: return __scribble_preparse_buffered(_str, fntFontNotoemojiMedium_Lite_32);
+		case 48: return __scribble_preparse_buffered(_str, fntFontNotoemojiMedium_Lite_48);
+		case 64: return __scribble_preparse_buffered(_str, fntFontNotoemojiMedium_Lite_64);
 	}
 }
 function scribble_google_mono(_string) {
@@ -142,11 +172,11 @@ function scribble_noto_mono(_string) {
 ///@ignore
 function __scribble_noto_preparse(_str) {
 	switch (EMOJI_SIZE) {
-		case 16: return scribble_preparse_buffered(_str, fntGoogleNoto_Lite_16);
-		case 24: return scribble_preparse_buffered(_str, fntGoogleNoto_Lite_24);
-		case 32: return scribble_preparse_buffered(_str, fntGoogleNoto_Lite_32);
-		case 48: return scribble_preparse_buffered(_str, fntGoogleNoto_Lite_48);
-		case 64: return scribble_preparse_buffered(_str, fntGoogleNoto_Lite_64);
+		case 16: return __scribble_preparse_buffered(_str, fntGoogleNoto_Lite_16);
+		case 24: return __scribble_preparse_buffered(_str, fntGoogleNoto_Lite_24);
+		case 32: return __scribble_preparse_buffered(_str, fntGoogleNoto_Lite_32);
+		case 48: return __scribble_preparse_buffered(_str, fntGoogleNoto_Lite_48);
+		case 64: return __scribble_preparse_buffered(_str, fntGoogleNoto_Lite_64);
 	}
 }
 function scribble_google(_string) {
@@ -159,11 +189,11 @@ function scribble_noto(_string) {
 ///@ignore
 function __scribble_segoe_ui_mono_preparse(_str) {
 	switch (EMOJI_SIZE) {
-		case 16: return scribble_preparse_buffered(_str, fntFontSeguiemj_Lite_16);
-		case 24: return scribble_preparse_buffered(_str, fntFontSeguiemj_Lite_24);
-		case 32: return scribble_preparse_buffered(_str, fntFontSeguiemj_Lite_32);
-		case 48: return scribble_preparse_buffered(_str, fntFontSeguiemj_Lite_48);
-		case 64: return scribble_preparse_buffered(_str, fntFontSeguiemj_Lite_64);
+		case 16: return __scribble_preparse_buffered(_str, fntFontSeguiemj_Lite_16);
+		case 24: return __scribble_preparse_buffered(_str, fntFontSeguiemj_Lite_24);
+		case 32: return __scribble_preparse_buffered(_str, fntFontSeguiemj_Lite_32);
+		case 48: return __scribble_preparse_buffered(_str, fntFontSeguiemj_Lite_48);
+		case 64: return __scribble_preparse_buffered(_str, fntFontSeguiemj_Lite_64);
 	}
 }
 function scribble_microsoft_mono(_string) {
@@ -176,11 +206,11 @@ function scribble_segoe_ui_mono(_string) {
 ///@ignore
 function __scribble_segoe_ui_preparse(_str) {
 	switch (EMOJI_SIZE) {
-		case 16: return scribble_preparse_buffered(_str, fntMicrosoftSegoeUiEmoji_Lite_16);
-		case 24: return scribble_preparse_buffered(_str, fntMicrosoftSegoeUiEmoji_Lite_24);
-		case 32: return scribble_preparse_buffered(_str, fntMicrosoftSegoeUiEmoji_Lite_32);
-		case 48: return scribble_preparse_buffered(_str, fntMicrosoftSegoeUiEmoji_Lite_48);
-		case 64: return scribble_preparse_buffered(_str, fntMicrosoftSegoeUiEmoji_Lite_64);
+		case 16: return __scribble_preparse_buffered(_str, fntMicrosoftSegoeUiEmoji_Lite_16);
+		case 24: return __scribble_preparse_buffered(_str, fntMicrosoftSegoeUiEmoji_Lite_24);
+		case 32: return __scribble_preparse_buffered(_str, fntMicrosoftSegoeUiEmoji_Lite_32);
+		case 48: return __scribble_preparse_buffered(_str, fntMicrosoftSegoeUiEmoji_Lite_48);
+		case 64: return __scribble_preparse_buffered(_str, fntMicrosoftSegoeUiEmoji_Lite_64);
 	}
 }
 function scribble_microsoft(_string) {
@@ -193,11 +223,11 @@ function scribble_segoe_ui(_string) {
 ///@ignore
 function __scribble_openmoji_preparse(_str) {
 	switch (EMOJI_SIZE) {
-		case 16: return scribble_preparse_buffered(_str, fntOpenmoji_Lite_16);
-		case 24: return scribble_preparse_buffered(_str, fntOpenmoji_Lite_24);
-		case 32: return scribble_preparse_buffered(_str, fntOpenmoji_Lite_32);
-		case 48: return scribble_preparse_buffered(_str, fntOpenmoji_Lite_48);
-		case 64: return scribble_preparse_buffered(_str, fntOpenmoji_Lite_64);
+		case 16: return __scribble_preparse_buffered(_str, fntOpenmoji_Lite_16);
+		case 24: return __scribble_preparse_buffered(_str, fntOpenmoji_Lite_24);
+		case 32: return __scribble_preparse_buffered(_str, fntOpenmoji_Lite_32);
+		case 48: return __scribble_preparse_buffered(_str, fntOpenmoji_Lite_48);
+		case 64: return __scribble_preparse_buffered(_str, fntOpenmoji_Lite_64);
 	}
 }
 function scribble_openmoji(_string) {
@@ -207,11 +237,11 @@ function scribble_openmoji(_string) {
 ///@ignore
 function __scribble_twemoji_preparse(_str) {
 	switch (EMOJI_SIZE) {
-		case 16: return scribble_preparse_buffered(_str, fntTwitterTwemoji_Lite_16);
-		case 24: return scribble_preparse_buffered(_str, fntTwitterTwemoji_Lite_24);
-		case 32: return scribble_preparse_buffered(_str, fntTwitterTwemoji_Lite_32);
-		case 48: return scribble_preparse_buffered(_str, fntTwitterTwemoji_Lite_48);
-		case 64: return scribble_preparse_buffered(_str, fntTwitterTwemoji_Lite_64);
+		case 16: return __scribble_preparse_buffered(_str, fntTwitterTwemoji_Lite_16);
+		case 24: return __scribble_preparse_buffered(_str, fntTwitterTwemoji_Lite_24);
+		case 32: return __scribble_preparse_buffered(_str, fntTwitterTwemoji_Lite_32);
+		case 48: return __scribble_preparse_buffered(_str, fntTwitterTwemoji_Lite_48);
+		case 64: return __scribble_preparse_buffered(_str, fntTwitterTwemoji_Lite_64);
 	}
 }
 function scribble_twemoji(_string) {
@@ -227,11 +257,11 @@ function scribble_discord(_string) {
 ///@ignore
 function __scribble_whatsapp_preparse(_str) {
 	switch (EMOJI_SIZE) {
-		case 16: return scribble_preparse_buffered(_str, fntWhatsapp_Lite_16);
-		case 24: return scribble_preparse_buffered(_str, fntWhatsapp_Lite_24);
-		case 32: return scribble_preparse_buffered(_str, fntWhatsapp_Lite_32);
-		case 48: return scribble_preparse_buffered(_str, fntWhatsapp_Lite_48);
-		case 64: return scribble_preparse_buffered(_str, fntWhatsapp_Lite_64);
+		case 16: return __scribble_preparse_buffered(_str, fntWhatsapp_Lite_16);
+		case 24: return __scribble_preparse_buffered(_str, fntWhatsapp_Lite_24);
+		case 32: return __scribble_preparse_buffered(_str, fntWhatsapp_Lite_32);
+		case 48: return __scribble_preparse_buffered(_str, fntWhatsapp_Lite_48);
+		case 64: return __scribble_preparse_buffered(_str, fntWhatsapp_Lite_64);
 	}
 }
 function scribble_whatsapp(_string) {
