@@ -29,7 +29,6 @@ if (mouse_check_button(mb_middle)) {
 	yy -= (mouse_y - mouse_middle_y_start) / 10;
 }
 
-
 /// Line drawing
 var _lines = string_count("\n", get_emojis());
 var _height = font_get_info(fntWhatsapp_Lite_16).size + _sep;
@@ -44,7 +43,6 @@ for(var _i=0; _i<_lines; _i+=2){
 	)
 }
 draw_set_alpha(1)
-
 
 // Render all
 var _off = EMOJI_SIZE, xx = 0;
@@ -64,4 +62,5 @@ scribble_whatsapp(glyph_string).draw(xx,yy)
 xx+=_off;
 
 scribble(unicode_string).draw(xx,yy)
+
 

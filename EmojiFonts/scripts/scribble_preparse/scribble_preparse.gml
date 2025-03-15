@@ -6,12 +6,13 @@ function __scribble_preparse_buffered(_text, _font) {
     static input_buff = buffer_create(0, buffer_grow, 1);
     static output_buff = buffer_create(0, buffer_grow, 1);
     
-	if (string_length(_text) == 0) return "";
-	
-	var _font_tag = $"[{font_get_name(_font)}]";
-	var _font_info = font_get_info(_font);
-	var _glyphs = _font_info.glyphs;
-	
+    if (string_length(_text) == 0) return "";
+
+    var _font_tag = $"[{font_get_name(_font)}]";
+    var _font_limited = font_has_65535_limits(_font); // Check font limitation
+    var _font_info = font_get_info(_font);
+    var _glyphs = _font_info.glyphs;
+    
     var byte_len = string_byte_length(_text);
 
     // Reset buffers
@@ -25,92 +26,92 @@ function __scribble_preparse_buffered(_text, _font) {
     var i = 0;
     var high_surrogate = 0;
 
-	while (i < byte_len) {
-	    var byte1 = buffer_read(input_buff, buffer_u8); i++;
+    while (i < byte_len) {
+        var byte1 = buffer_read(input_buff, buffer_u8); i++;
 
-	    // **Detect 4-byte UTF-8 sequences (Emoji & Supplementary Planes)**
-	    if (byte1 >= 0xF0 && byte1 <= 0xF4) { 
-	        // Read the next three bytes of the sequence
-	        var byte2 = buffer_read(input_buff, buffer_u8); i++;
-	        var byte3 = buffer_read(input_buff, buffer_u8); i++;
-	        var byte4 = buffer_read(input_buff, buffer_u8); i++;
+        // **Detect 4-byte UTF-8 sequences (Emoji & Supplementary Planes)**
+        if (byte1 >= 0xF0 && byte1 <= 0xF4) { 
+            // Read the next three bytes of the sequence
+            var byte2 = buffer_read(input_buff, buffer_u8); i++;
+            var byte3 = buffer_read(input_buff, buffer_u8); i++;
+            var byte4 = buffer_read(input_buff, buffer_u8); i++;
 
-	        // Decode the 4-byte UTF-8 sequence to a Unicode codepoint
-	        var codepoint = ((byte1 & 0x07) << 18) |
-	                        ((byte2 & 0x3F) << 12) |
-	                        ((byte3 & 0x3F) << 6) |
-	                        (byte4 & 0x3F);
+            // Decode the 4-byte UTF-8 sequence to a Unicode codepoint
+            var codepoint = ((byte1 & 0x07) << 18) |
+                            ((byte2 & 0x3F) << 12) |
+                            ((byte3 & 0x3F) << 6) |
+                            (byte4 & 0x3F);
 
-	        // **If it's an emoji (outside BMP), insert Scribble font tags**
-	        if (codepoint > 0xFFFF) { 
-	            var lower_surrogate = (codepoint - 0x10000) & 0xFFFF; // Extract only the last 16 bits
+            // **If font is limited & codepoint is above 0xFFFF, use only lower surrogate**
+            if (_font_limited && codepoint > 0xFFFF) { 
+                var lower_surrogate = (codepoint - 0x10000) & 0xFFFF; 
 
-	            // Insert the formatted emoji with the correct font tag
-	            buffer_write(output_buff, buffer_text, _font_tag);
-				show_debug_message($"lower_surrogate :: {chr(lower_surrogate)} :: {lower_surrogate}")
-	            buffer_write_codepoint(output_buff, lower_surrogate);
-	            buffer_write(output_buff, buffer_text, "[/font]");
-	            continue;
-	        }
-	    }
+                buffer_write(output_buff, buffer_text, _font_tag);
+                buffer_write_codepoint(output_buff, lower_surrogate);
+                buffer_write(output_buff, buffer_text, "[/font]");
+                continue;
+            }
 
-	    // **Handle UTF-16 Surrogate Pairs (if input was UTF-16)**
-	    if (byte1 >= 0xD800 && byte1 <= 0xDBFF) { // High Surrogate Detected
-	        high_surrogate = byte1;
-	        continue;
-	    }
+            // **If font is NOT limited, just wrap the emoji in `[font]`**
+            buffer_write(output_buff, buffer_text, _font_tag);
+            buffer_write_codepoint(output_buff, codepoint);
+            buffer_write(output_buff, buffer_text, "[/font]");
+            continue;
+        }
 
-	    if (byte1 >= 0xDC00 && byte1 <= 0xDFFF && high_surrogate != 0) { 
-	        // **We have a valid surrogate pair**
-	        var codepoint = to_codepoint(high_surrogate, byte1);
-	        high_surrogate = 0; // Reset after use
+        // **Handle UTF-16 Surrogate Pairs (if input was UTF-16)**
+        if (byte1 >= 0xD800 && byte1 <= 0xDBFF) { // High Surrogate Detected
+            high_surrogate = byte1;
+            continue;
+        }
+        if (byte1 >= 0xDC00 && byte1 <= 0xDFFF && high_surrogate != 0) { 
+            var codepoint = to_codepoint(high_surrogate, byte1);
+            high_surrogate = 0; // Reset after use
         
-	        if (codepoint > 0xFFFF) { 
-	            // **Insert Scribble Font Tags for Emojis**
-	            buffer_write(output_buff, buffer_text, _font_tag);
-				show_debug_message($"byte1 :: {chr(byte1)} :: {byte1}")
-	            buffer_write_codepoint(output_buff, byte1); // Write lower surrogate only
-	            buffer_write(output_buff, buffer_text, "[/font]");
-	            continue;
-	        }
-	    }
+            if (_font_limited && codepoint > 0xFFFF) { 
+                buffer_write(output_buff, buffer_text, _font_tag);
+                buffer_write_codepoint(output_buff, byte1);
+                buffer_write(output_buff, buffer_text, "[/font]");
+                continue;
+            }
 
-	    // **Write normally for standard characters**
-	    if (high_surrogate == 0) {
-			if (byte1 < 0x80) {
-			    var utf8_char = chr(byte1); // Single-byte ASCII
-			} 
-			else if ((byte1 & 0xE0) == 0xC0) {
-			    var byte2 = buffer_read(input_buff, buffer_u8); i++;
-			    var utf8_char = chr(((byte1 & 0x1F) << 6) | (byte2 & 0x3F));
-			} 
-			else if ((byte1 & 0xF0) == 0xE0) {
-			    var byte2 = buffer_read(input_buff, buffer_u8); i++;
-			    var byte3 = buffer_read(input_buff, buffer_u8); i++;
-			    var utf8_char = chr(((byte1 & 0x0F) << 12) | ((byte2 & 0x3F) << 6) | (byte3 & 0x3F));
-			} 
-			else if ((byte1 & 0xF8) == 0xF0) {
-			    var byte2 = buffer_read(input_buff, buffer_u8); i++;
-			    var byte3 = buffer_read(input_buff, buffer_u8); i++;
-			    var byte4 = buffer_read(input_buff, buffer_u8); i++;
-			    var utf8_char = chr(((byte1 & 0x07) << 18) | ((byte2 & 0x3F) << 12) | ((byte3 & 0x3F) << 6) | (byte4 & 0x3F));
-			}
+            buffer_write(output_buff, buffer_text, _font_tag);
+            buffer_write_codepoint(output_buff, codepoint);
+            buffer_write(output_buff, buffer_text, "[/font]");
+            continue;
+        }
 
-			if (byte1 != ord(" "))
-			&& (struct_exists(_glyphs, utf8_char)) {
-				//show_debug_message($"Glyph found: {utf8_char}");
-				buffer_write(output_buff, buffer_text, _font_tag);
-				buffer_write(output_buff, buffer_text, utf8_char);
-	            buffer_write(output_buff, buffer_text, "[/font]");
-				
-				continue;
-			}
-			
-			
-	        buffer_write(output_buff, buffer_text, utf8_char);
-	    }
-	}
+        // **Write normally for standard characters**
+        var utf8_char;
+        if (byte1 < 0x80) {
+            utf8_char = chr(byte1); // Single-byte ASCII
+        } 
+        else if ((byte1 & 0xE0) == 0xC0) {
+            var byte2 = buffer_read(input_buff, buffer_u8); i++;
+            utf8_char = chr(((byte1 & 0x1F) << 6) | (byte2 & 0x3F));
+        } 
+        else if ((byte1 & 0xF0) == 0xE0) {
+            var byte2 = buffer_read(input_buff, buffer_u8); i++;
+            var byte3 = buffer_read(input_buff, buffer_u8); i++;
+            utf8_char = chr(((byte1 & 0x0F) << 12) | ((byte2 & 0x3F) << 6) | (byte3 & 0x3F));
+        } 
+        else if ((byte1 & 0xF8) == 0xF0) {
+            var byte2 = buffer_read(input_buff, buffer_u8); i++;
+            var byte3 = buffer_read(input_buff, buffer_u8); i++;
+            var byte4 = buffer_read(input_buff, buffer_u8); i++;
+            utf8_char = chr(((byte1 & 0x07) << 18) | ((byte2 & 0x3F) << 12) | ((byte3 & 0x3F) << 6) | (byte4 & 0x3F));
+        }
 
+        // **Check if the glyph exists in the font**
+        if (struct_exists(_glyphs, utf8_char)) {
+            buffer_write(output_buff, buffer_text, _font_tag);
+            buffer_write(output_buff, buffer_text, utf8_char);
+            buffer_write(output_buff, buffer_text, "[/font]");
+            continue;
+        }
+        
+        buffer_write(output_buff, buffer_text, utf8_char);
+    }
 
     // Convert the buffer into a proper Unicode string
     buffer_seek(output_buff, buffer_seek_start, 0);
@@ -118,38 +119,27 @@ function __scribble_preparse_buffered(_text, _font) {
 
     buffer_resize(input_buff, 0);
     buffer_resize(output_buff, 0);
-	
-	return parsed_str;
+    
+    return parsed_str;
 }
+
 ///@ignore
 function font_has_65535_limits(_font) {
-    var _font_info = font_get_info(_font);
-    var _glyphs = _font_info.glyphs;
-    var _glyph_keys = struct_get_names(_glyphs);
-    static _mismatches = [];
-    
-    for (var _i = 0; _i < array_length(_glyph_keys); _i++) {
-        var _key = _glyph_keys[_i];
-        var _char = _glyphs[$ _key].char;
+    var _info = font_get_info(_font);
+    var _glyphs = _info.glyphs;
+    var _glyph_names = struct_get_names(_glyphs);
+	
+    for (var i = 0; i < array_length(_glyph_names); i++) {
+        var _char = _glyph_names[i];
+        var _ord = ord(_char);
 
-        // Convert the key to a character using ord()
-        var _ord_value = ord(_key);
-        
-        // Check if glyph character matches the ord() value
-        if (_ord_value != _char) {
-            array_push(_mismatches, _key);
+        // If character is above 65535, GameMaker does not support it properly
+        if (_ord > 0xFFFF) {
+            return false;
         }
     }
 
-    if (array_length(_mismatches) > 0) {
-		array_resize(_mismatches, 0);
-        show_debug_message("Mismatched glyphs found: " + string_join(_mismatches, ", "));
-		return true;
-    } else {
-		array_resize(_mismatches, 0);
-        show_debug_message("All glyphs match their expected ord() values.");
-		return false;
-    }
+    return true;
 }
 
 ///@ignore

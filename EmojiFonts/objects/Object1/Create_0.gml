@@ -10,12 +10,14 @@ string_lines = string_split(emoji_str, "\n", true)
 var glyph_strings = [];
 var unicode_strings = [];
 var name_strings = [];
-for(var _i=0; _i<__SCRIBBLE_MAX_LINES; _i++) {
+
+//need to report a bug to scribble about needing to do this
+var _length =(__SCRIBBLE_MAX_LINES-4)/2
+for(var _i=0; _i < _length; _i++) {
 	var _str = string_lines[_i];
 	_str = string_replace_all(_str, @'" :: "', "|");
 	_str = string_replace_all(_str, @'"', "");
 	var _arr = string_split(_str, "|")
-	show_debug_message(_arr)
 	glyph_strings[_i] = _arr[0];
 	unicode_strings[_i] = " :: " + _arr[1] + " :: " + _arr[2];
 	//name_strings[_i] = _arr[2];
@@ -28,7 +30,5 @@ for(var _i=0; _i<__SCRIBBLE_MAX_LINES; _i++) {
 glyph_string = string_join_ext("\n", glyph_strings);
 unicode_string = string_join_ext("\n", unicode_strings);
 //name_string = string_join_ext("\n", name_strings);
-
-
 
 show_debug_overlay(true)
