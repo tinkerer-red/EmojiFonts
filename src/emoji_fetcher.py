@@ -188,16 +188,61 @@ def convert_url(webp_url):
         return png_url
     return None  # Return None if it can't be converted
 
+import re
+
+import re
+
 def extract_filename(png_url):
     """
-    Extracts the emoji encoding as the filename.
-    Example:
-    Input:  https://em-content.zobj.net/source/serenityos/392/red-envelope_1f9e7.png
-    Output: 1f9e7.png
+    Extracts the correct Unicode-based filename from a given PNG URL.
+    - Ensures format is `<code>-<code>.png`
+    - Uses start/stop indexes to remove trailing garbage Unicode
+    - Filters out false matches (e.g., words like "face", "feed", "peace")
+    - If only **one** valid Unicode match exists, return it directly.
     """
-    filename = png_url.split("/")[-1]  # Get the last part of the URL
-    encoding_part = filename.split("_")[-1]  # Extract only the encoding
-    return encoding_part  # This will be something like "1f9e7.png"
+    filename = png_url.split("/")[-1]  # Get last part of URL (e.g., "face-with-rolling-eyes_1f644.png")
+    filename_no_ext = filename.replace(".png", "")  # Temporarily remove .png
+
+    # If the filename contains exactly one underscore `_`, return the last Unicode match  ex: `pig-face_1f437.png`
+    if filename_no_ext.count("_") == 1:
+        return filename_no_ext.split("_")[-1] + ".png"
+
+    # Regex pattern to extract potential Unicode sequences (4-5 hex digits)
+    possible_matches = re.findall(r'([0-9a-fA-F]{4,5})', filename_no_ext)
+
+    if not possible_matches:
+        raise ValueError(f"Could not extract Unicode from: {filename}")
+
+    valid_unicode_matches = []
+
+    for match in possible_matches:
+        start_index = filename_no_ext.find(match)  # Find where it appears
+
+        # Check if everything after this match is valid Unicode (`0-9a-fA-F-`)
+        valid_after = all(c in "0123456789abcdefABCDEF-_" for c in filename_no_ext[start_index + len(match):])
+
+        if valid_after:
+            valid_unicode_matches.append(match)
+
+    if not valid_unicode_matches:
+        raise ValueError(f"Filtered out all Unicode matches from: {filename}")
+
+    # Find where the first Unicode sequence starts
+    first_match = valid_unicode_matches[0]
+    start_index = filename.find(first_match)  # Position in original filename
+
+    # Look ahead for `_` or `.png` to determine where to stop
+    stop_index = len(filename)  # Default: Stop at the end
+    if "_" in filename[start_index:]:
+        stop_index = filename.index("_", start_index)  # Stop at first `_`
+    elif ".png" in filename[start_index:]:
+        stop_index = filename.index(".png", start_index)  # Stop at `.png`
+
+    # Extract the correct part of the filename
+    clean_filename = filename[start_index:stop_index] + ".png"
+
+    return clean_filename
+
 
 def download_image(url, save_path):
     """
@@ -254,7 +299,7 @@ def process_platform(driver, platform_config):
                 download_image(png_url, save_path)
             else:
                 print(f"[{datetime.now().strftime('%H:%M:%S')}] Skipped (already exists): {save_path}")
-
+    
 def main():
     """Runs the scraper for all platforms in the CONFIG list."""
     print(f"[{datetime.now().strftime('%H:%M:%S')}] Launching Selenium...")
